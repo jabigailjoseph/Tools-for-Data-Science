@@ -1,0 +1,221 @@
+---
+title: "Data Analysis Report: NYC Flights 2013"
+author: "Abigail Joseph"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: cerulean
+    toc: yes
+    toc_depth: 2
+---
+
+# Introduction
+
+This report presents a detailed analysis of the `nycflights13` dataset. This dataset contains information about flights departing from New York City airports in 2013. We'll investigate various dimensions such as airport traffic, flight delays, and popular destinations.
+
+## Setup and Data Load
+
+```{r setup, message=FALSE}
+library(nycflights13)
+library(dplyr)
+library(ggplot2)
+```
+
+```{r data-load, echo=FALSE}
+flights <- nycflights13::flights
+```
+
+# Data Exploration
+
+## New York Airports in the Dataset
+
+```{r q1}
+airports <- flights %>% distinct(origin)
+airports
+```
+
+## Busiest New York Airport
+
+```{r q2}
+busiest_airport <- flights %>%
+  group_by(origin) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  slice(1)
+
+busiest_airport
+```
+
+## Number of Flights Departing from LGA on Independence Day
+
+```{r q3}
+flights_on_july_4 <- flights %>%
+  filter(origin == "LGA", year == 2013, month == 7, day == 4) %>%
+  summarise(count = n())
+
+flights_on_july_4
+```
+
+## Busiest Day of the Year
+
+```{r q4}
+busiest_day <- flights %>%
+  group_by(year, month, day) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  slice(1)
+
+busiest_day
+```
+
+## Popular Destination Airports
+
+```{r q5}
+destination_airports <- flights %>% distinct(dest)
+most_popular_dest <- flights %>%
+  group_by(dest) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  slice(1)
+
+list(unique_destinations = nrow(destination_airports), most_popular_destination = most_popular_dest)
+```
+
+## Flight Duration Insights
+
+### Longest Flight
+
+```{r q6}
+longest_flight <- flights %>%
+  arrange(desc(air_time)) %>%
+  slice(1)
+
+longest_flight
+```
+
+### Shortest Flight
+
+```{r q7}
+shortest_flight <- flights %>%
+  arrange(air_time) %>%
+  slice(1)
+
+shortest_flight
+```
+
+## Flight Volume by Carrier
+
+```{r q8}
+top_carrier <- flights %>%
+  group_by(carrier) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  slice(1)
+
+top_carrier
+```
+
+## Flight Delays by Destination
+
+```{r q9}
+shortest_avg_delay_dest <- flights %>%
+  group_by(dest) %>%
+  summarise(avg_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  arrange(avg_delay) %>%
+  slice(1)
+
+shortest_avg_delay_dest
+```
+
+# Visualization
+
+Various plots offer a visual perspective on the `nycflights13` dataset insights.
+
+## Total Number of Departures per Month per Departure Airport
+
+```{r plot1}
+departures_per_month <- flights %>%
+group_by(origin, month) %>%
+summarise(total_departures = n())
+
+ggplot(data = departures_per_month, aes(x = month, y = total_departures, 
+                                        group = origin, color = origin)) +
+geom_line(size = 1.5) + 
+labs(title = "Total Number of Departures per Month per Airport",
+       x = "Month",
+       y = "Total Departures") +
+theme_minimal() +
+scale_x_continuous(breaks = 1:12, labels = month.abb)
+```
+
+## Average Departure Delay for Flights Departing from JFK per Month
+
+```{r plot2}
+avg_delay_per_month <- flights %>%
+filter(origin == "JFK") %>%
+group_by(month) %>%
+summarise(avg_dep_delay = mean(dep_delay, na.rm = TRUE))
+
+ggplot(data = avg_delay_per_month, aes(x = month, y = avg_dep_delay)) +
+geom_line(size = 1.5, color = "blue") + 
+geom_point(size = 2.5, color = "red") +
+labs(title = "Average Departure Delay from JFK per Month",
+       x = "Month",
+       y = "Average Departure Delay (minutes)") +
+theme_minimal() +
+scale_x_continuous(breaks = 1:12, labels = month.abb)
+```
+
+# Bonus Questions 
+
+## Airline with Shortest Average Delay per Flight
+
+```{r bonus_q1}
+shortest_avg_delay_carrier <- flights %>%
+  group_by(carrier) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  arrange(avg_delay) %>%
+  slice(1)
+
+shortest_avg_delay_carrier
+```
+
+## Airline with Longest Average Delay per Flight
+
+```{r bonus_q2}
+longest_avg_delay_carrier <- flights %>%
+  group_by(carrier) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  arrange(desc(avg_delay)) %>%
+  slice(1)
+
+longest_avg_delay_carrier
+```
+
+## Worst Day of the Year to Catch a Flight from JFK
+
+```{r bonus_q3}
+worst_day_JFK <- flights %>%
+  filter(origin == "JFK") %>%
+  group_by(year, month, day) %>%
+  summarise(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  ungroup() %>% 
+  arrange(desc(avg_delay)) %>%
+  slice(1)
+
+worst_day_JFK
+```
+
+# Conclusion
+
+Based on our in-depth analysis of the `nycflights13` dataset, we've derived the following insights regarding flight operations in New York in 2013:
+
+- There are three primary airports in NYC from which flights depart.
+- The busiest airport in terms of departures is `[busiest_airport$origin]`.
+- A total of `[flights_on_july_4$count]` flights departed from LGA on July 4, 2013.
+- The busiest day of the year was `[busiest_day$month]/[busiest_day$day]/[busiest_day$year]` with `[busiest_day$count]` flights.
+- The most popular flight destination was `[most_popular_dest$dest]`.
+- Flight durations varied considerably, with the longest flight lasting `[longest_flight$air_time]` minutes and the shortest just `[shortest_flight$air_time]` minutes.
+- The airline with the largest number of flights was `[top_carrier$carrier]`.
+
+Further studies could dive deeper into specific airlines' performance, seasonal patterns in flight delays, and correlations between flight durations and delays.

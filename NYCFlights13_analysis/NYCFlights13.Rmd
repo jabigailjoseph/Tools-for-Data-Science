@@ -1,0 +1,445 @@
+# Abigail Joseph
+
+_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+# Write a code in R that loads the data into a variable in the R workspace: 
+# flights_nyc_2013 (a336,776 x 19 data frame, aka “tibble”).
+
+install.packages("nycflights13")
+library(nycflights13)
+
+flights <- nycflights13::flights
+
+
+# **QUESTION 1**: How many different New York airports does your dataset contain 
+# and which one is the busiest of them?
+
+# installing dplyr
+library(dplyr)
+
+# filtering all airports in the dataset
+airports <- flights %>% distinct(origin)
+# printing number of airports 
+cat("New York Airports in the dataset:\n")
+airports
+
+# finding the busiest airport
+busiest_airport <- flights %>%
+group_by(origin) %>%
+
+# calculating number of flights from each airport
+summarise(count = n()) %>%
+# arranging in descending order (airport with most flights at the top)
+arrange(desc(count)) %>%
+# selecting the first row (busiest airport)
+slice(1)
+
+# displaying the busiest airport
+cat("\nThe busiest New York Airport in the dataset is:\n")
+print(busiest_airport)
+
+
+# **QUESTION 2**: How many different destination airports does your dataset
+# contain and what is the most popular destination (airport code)?
+
+# finding the number of destination airports
+destination_airports <- flights %>% 
+distinct(dest) 
+
+# displaying the number of destination airports
+cat("Number of unique destination airports:", nrow(destination_airports), "\n")
+
+# finding the most popular destination airport
+
+most_popular_dest <- flights %>%
+group_by(dest) %>%
+  
+# number of flights for each destination
+summarise(count = n()) %>%
+# arranging in descending order
+arrange(desc(count)) %>%
+# selecting the first row (most popular destination)
+slice(1)
+
+# displaying
+cat("The most popular destination airport is:", most_popular_dest$dest, "with", 
+    most_popular_dest$count, "flights.\n")
+
+
+# **QUESTION 3**: How many flights departed from LGA on July 4, 2013?
+
+july_4_flights <- flights %>%
+  
+# filtering flights from LGA on the specific date
+filter(origin == "LGA", year == 2013, month == 7, day == 4) %>%
+# counting the number of rows filtered
+summarise(count = n())
+
+# displaying
+cat("Number of flights that departed from LGA on July 4, 2013:", 
+    july_4_flights$count, "\n")
+
+
+# **QUESTION 4**: What was the busiest day of the year?
+
+busiest_day <- flights %>%
+
+# grouping the year, month, and day of the flights 
+group_by(year, month, day) %>%
+
+summarise(count = n()) %>%
+arrange(desc(count)) %>%
+  
+head(1)
+
+# displaying the busiest day 
+cat("The busiest day of the year was:", busiest_day$month, "/", 
+    busiest_day$day, "/", busiest_day$year, 
+    "with", busiest_day$count, "flights.\n")
+
+
+# **QUESTION 5**: What was the busiest month of the year?
+
+# grouping the flights by month and year
+busiest_month <- flights %>%
+group_by(year, month) %>%
+  
+summarise(count = n()) %>%
+arrange(desc(count)) %>%
+slice(1)
+
+# getting the name of the busiest month
+month_name <- month.abb[busiest_month$month]
+
+# printing the busiest month
+cat("The busiest month of the year was:", month_name, "with", 
+    busiest_month$count, "flights.\n")
+
+
+# **QUESTION 6**: What is the longest flight in the dataset?
+# (Hint: use the air_time information to answer this question and the next)
+
+longest_flight <- flights %>%
+# sorting the longest flights   
+arrange(desc(air_time)) %>%
+slice(1)
+
+# displaying the longest fight
+
+cat("The longest flight in the dataset was from", longest_flight$origin, 
+    "to", longest_flight$dest, 
+    "with an air time of", longest_flight$air_time, "minutes.\n")
+
+
+# **QUESTION 7**: What is the shortest flight in the dataset?
+
+shortest_flight <- flights %>%
+
+# sorting flights by air time (ascending order)
+arrange(air_time) %>%
+#retrieving the shortest flight
+slice(1)
+
+# displaying the shortest flight
+cat("The shortest flight in the dataset was from", shortest_flight$origin, 
+    "to", shortest_flight$dest, 
+    "with an air time of", shortest_flight$air_time, "minutes.\n")
+
+
+# **QUESTION 8**: Which carrier had the largest number of flights?
+
+top_carrier <- flights %>%
+
+# grouping flights by carrier
+group_by(carrier) %>%
+  
+# calculating  the number of flights per carrier
+summarise(count = n()) %>%
+arrange(desc(count)) %>%
+  
+# displaying the carrier with the largest number of flights
+  cat("The carrier with the largest number of flights was:", 
+      top_carrier$carrier, 
+      "with", top_carrier$count, "flights.\n")
+
+
+# **QUESTION 9**: Which destination (airport code) had the shortest average
+# arr_delay?
+
+shortest_avg_delay_dest <- flights %>%
+  
+# grouping flights by destination
+group_by(dest) %>%
+# calculating average arrival delay
+summarise(avg_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  
+# filtering shortest average arrival delay
+arrange(avg_delay) %>%
+slice(1)
+
+# displaying shortest average arrival delay
+cat("The destination with the shortest average arrival delay was:", 
+    shortest_avg_delay_dest$dest, 
+    "with an average delay of", round(shortest_avg_delay_dest$avg_delay, 2), 
+    "minutes.\n")
+
+
+# **QUESTION 10**: [Enter a new meaningful question of your choice here]
+# Which month experienced the highest number of flight cancellations?
+
+cancelled_flights_month <- flights %>%
+
+# grouping the flights by month
+group_by(month) %>%
+# counting the number of cancelled flights
+summarise(cancelled_flights = n()) %>%
+  
+# filtering the month with the highest flight cancellations  
+arrange(desc(cancelled_flights)) %>%
+slice(1)
+
+# displaying the month with the highest flight cancellations
+cat("The month with the highest number of flight cancellations was:", 
+    month.abb[cancelled_flights_month$month], 
+    "with", cancelled_flights_month$cancelled_flights, "cancelled flights.\n")
+
+
+_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+
+# **PLOT 1**: Total number of departures per month per departure airport
+# (“origin”) [line plot?]
+
+library(ggplot2)
+
+# calculating total number of departures per month
+departures_per_month <- flights %>%
+group_by(origin, month) %>%
+summarise(total_departures = n())
+
+# plotting
+
+# setting aesthetics (x and y axes, grouping by origin, and color)
+ggplot(data = departures_per_month, aes(x = month, y = total_departures, 
+                                        group = origin, color = origin)) +
+# adding lines + setting line thickness
+geom_line(size = 1.5) + 
+  
+# setting plot title + labeling axes
+labs(title = "Total Number of Departures per Month per Airport",
+       x = "Month",
+       y = "Total Departures") +
+  
+# aesthetic detail (theme)
+theme_minimal() +
+  
+# displaying the months on the plot
+scale_x_continuous(breaks = 1:12, labels = month.abb)
+  
+
+# **PLOT 2**: Average departure delay for flights departing from JFK per
+# month [line plot?]
+
+# calculating average departure delay per month for flights departing from JFK
+avg_delay_per_month <- flights %>%
+filter(origin == "JFK") %>%
+  
+group_by(month) %>%
+summarise(avg_dep_delay = mean(dep_delay, na.rm = TRUE))
+
+# plotting
+ggplot(data = avg_delay_per_month, aes(x = month, y = avg_dep_delay)) +
+geom_line(size = 1.5, color = "blue") + 
+geom_point(size = 2.5, color = "red") +
+  
+labs(title = "Average Departure Delay from JFK per Month",
+       x = "Month",
+       y = "Average Departure Delay (minutes)") +
+  
+theme_minimal() +
+scale_x_continuous(breaks = 1:12, labels = month.abb)
+
+
+# **PLOT 3**: Total number of flights per airline/carrier [bar plot?] 
+# [pie chart?]
+
+# calculating total flights per carrier
+flights_per_carrier <- flights %>%
+group_by(carrier) %>%
+  
+summarise(total_flights = n()) %>%
+arrange(desc(total_flights))
+    
+# plotting
+ggplot(data = flights_per_carrier, aes(x = reorder(carrier, total_flights), 
+                                       y = total_flights)) +
+geom_bar(stat = "identity", fill = "pink") +
+
+labs(title = "Total Number of Flights per Airline/Carrier",
+       x = "Airline/Carrier",
+       y = "Total Flights") +
+  
+theme_minimal()
+
+
+# **PLOT 4**: Statistical distribution of departure delays for the 5 busiest
+# carriers [box plot?] [violin plot?]
+
+# calculating 5 busiest carriers based on the number of flights
+top5_carriers <- flights %>%
+  
+group_by(carrier) %>%
+summarise(total_flights = n()) %>%
+arrange(desc(total_flights)) %>%
+  
+slice_head(n = 5) %>%
+pull(carrier)
+
+# filtering the top 5 carriers
+flights_top5 <- flights %>%
+filter(carrier %in% top5_carriers)
+
+# plotting
+ggplot(data = flights_top5, aes(x = carrier, y = dep_delay, fill = carrier)) +
+geom_violin(trim = FALSE) +
+  
+labs(title = "Distribution of Departure Delays for the 5 Busiest Carriers",
+       x = "Airline/Carrier",
+       y = "Departure Delay (minutes)") +
+  
+theme_minimal() +
+theme(legend.position = "none") 
+
+
+# **PLOT 5**: Total number of flights with departure delay greater than 2
+# hours per month [bar plot?]
+
+# filtering flights with a departure delay greater than 2 hours
+delayed_flights_per_month <- flights %>%
+filter(dep_delay > 120) %>%
+  
+# grouping by month
+group_by(month) %>%
+summarise(total_delayed = n())
+
+# plotting (different colors for fun)
+ggplot(data = delayed_flights_per_month, aes(x = month, y = total_delayed, 
+                                             fill = as.factor(month))) +
+geom_bar(stat = "identity") +
+  
+labs(title = "Total Flights with Departure Delay > 2 Hours per Month",
+       x = "Month",
+       y = "Total Flights") +
+  
+theme_minimal() +
+scale_x_continuous(breaks = 1:12, labels = month.abb) +
+scale_fill_brewer(palette = "Set3", name = "Month")
+
+
+_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+
+## BONUS QUESTIONS 
+
+# **BONUS QUESTION 1***: Which airline had the shortest average delay per 
+# flight?
+
+shortest_avg_delay_carrier <- flights %>%
+  
+# grouping by carrier
+group_by(carrier) %>%
+# calculating shortest average delay
+summarise(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  
+# filtering shortest average delay
+arrange(avg_delay) %>%
+slice(1)
+
+# displaying shortest average delay
+shortest_avg_delay_carrier
+
+
+# **BONUS QUESTION 2**: Which airline had the longest average delay per flight?
+
+longest_avg_delay_carrier <- flights %>%
+
+# grouping by carrier    
+group_by(carrier) %>%
+# calculating average delay
+summarise(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  
+# filtering longest average delay
+arrange(desc(avg_delay)) %>%
+slice(1)
+
+# displaying
+longest_avg_delay_carrier
+
+
+# **BONUS QUESTION 3**: What was the worst day of the year (i.e., longest
+# average dep_delay) to catch a flight from JFK?
+
+worst_day_JFK <- flights %>%
+  
+# filtering JFK
+filter(origin == "JFK") %>%
+
+# grouping to find  (worst) day of the year
+group_by(year, month, day) %>%
+# computing average delay
+summarise(avg_delay = mean(dep_delay, na.rm = TRUE)) %>%
+  
+# return only one day
+ungroup() %>% 
+  
+# filtering longest average delay
+arrange(desc(avg_delay)) %>%
+slice(1)
+
+# displaying
+worst_day_JFK
+
+
+# **BONUS QUESTION 4: What percentage of flights departing from JFK had a
+# delay of less than 10% of the total flight time?
+
+jfk_delays <- flights %>%
+
+# filtering JFK
+filter(origin == "JFK") %>%
+  
+# calculating the percentage
+summarise(
+    total_flights = n(),
+    flights_less_than_10_percent = sum(dep_delay < (0.10 * air_time), 
+                                       na.rm = TRUE)
+  )
+percentage <- (jfk_delays$flights_less_than_10_percent / 
+                 jfk_delays$total_flights) * 100
+
+# displaying
+percentage
+
+
+# **BONUS QUESTION 5: Which airline had the shortest number of flights
+# delayed by more than 2 hours between May and September?
+
+shortest_delayed_flights <- flights %>%
+
+# filtering May and September flights  
+filter(month %in% 5:9) %>%
+# filtering flights with > 2 hour delay time
+filter(dep_delay > 120) %>%
+  
+# grouping by airline
+group_by(carrier) %>%
+  
+# calculating delayed flights for each airline
+summarise(count_delayed = n()) %>%
+
+# filtering carrier with least number of delayed flights
+arrange(count_delayed) %>%
+slice(1)
+
+# displaying
+shortest_delayed_flights

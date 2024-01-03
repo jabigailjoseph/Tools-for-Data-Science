@@ -1,0 +1,40 @@
+# Abigail Joseph
+# homework 1 - Tools for Data Science
+# *.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.*.
+
+# install tidyverse
+install.packages("tidyverse")
+
+# read the mpg dataset
+library(tidyverse)
+mpg
+
+# store it in a new variable
+mydata = mpg
+mydata
+
+# Plot the relationship between engine size (displ) and fuel efficiency (hwy)
+# with vehicles labeled by class, in an aesthetically pleasant and meaningful 
+# way
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy, color = class))
+
+# generate a scatterplot of hwy vs cyl in the mpg dataset
+ggplot(data = mpg) + 
+       geom_point(mapping = aes(x = hwy, y = cyl, color = class))
+
+# Compute and display the total number of 4-, 5-, 6- and 8-cylinder vehicles in 
+# the dataset
+table(mpg['cyl'])
+
+# Compute and display the details (manufacturer, model, etc.) of the most 
+# fuel-efficient vehicles in the dataset.
+most <- which.max(mpg$cty)
+most
+mpg[most,]
+
+# Compute and display the details (manufacturer, model, etc.) of the least 
+# fuel-efficient vehicles in the dataset.
+least <- which.min(mpg$cty)
+least
+mpg[least,]

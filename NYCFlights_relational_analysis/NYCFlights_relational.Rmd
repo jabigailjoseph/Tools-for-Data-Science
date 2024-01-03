@@ -1,0 +1,131 @@
+# Abigail Joseph
+
+_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+# QUESTION 1: Compute the average delay by destination, then join on the airports 
+# data frame so you can show the spatial distribution of delays.
+
+# installing libraries
+install.packages("nycflights13")
+install.packages("dplyr")
+install.packages("ggplot2")
+
+# Load libraries
+library(nycflights13)
+library(dplyr)
+library(ggplot2)
+
+# Compute the average delay by destination
+avg_delay_by_dest <- flights %>%
+  group_by(dest) %>%
+  summarize(avg_delay = mean(arr_delay, na.rm = TRUE))
+
+# Join with airports data frame
+delay_with_airports <- left_join(avg_delay_by_dest, airports, by = c("dest" = "faa"))
+
+# Plot the spatial distribution of delays
+ggplot(data = delay_with_airports, aes(x = lon, y = lat, color = avg_delay)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Average Arrival Delay by Destination",
+       x = "Longitude",
+       y = "Latitude",
+       color = "Avg Delay (mins)")
+
+
+
+# QUESTION 2: Is there a relationship between the age of a plane and its delays?
+# Write code to (show a plot that) support(s) your conclusions
+
+# joining flights data with planes data
+flights_planes <- left_join(flights, planes, by = "tailnum")
+
+# age of the plane
+current_year <- as.numeric(format(Sys.Date(), "%Y"))
+flights_planes$plane_age <- current_year - flights_planes$year.x
+
+# average delay by plane age
+avg_delay_by_age <- flights_planes %>%
+  filter(!is.na(plane_age)) %>%
+  group_by(plane_age) %>%
+  summarize(avg_delay = mean(arr_delay, na.rm = TRUE))
+
+# result (plot)
+ggplot(avg_delay_by_age, aes(x = plane_age, y = avg_delay)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Average Delay by Plane Age",
+       x = "Plane Age (years)",
+       y = "Average Delay (minutes)") +
+  theme_minimal()
+
+
+# QUESTION 3: Filter flights to only show flights with planes that have flown at least 100
+# flights.
+
+# number of flights for each plane
+flight_counts <- flights %>%
+  group_by(tailnum) %>%
+  summarize(flight_count = n()) %>%
+  filter(flight_count >= 100)
+
+# joining back to the flights data
+flights_with_frequent_planes <- left_join(flights, flight_counts, by = "tailnum") %>%
+  filter(!is.na(flight_count))
+
+# result
+head(flights_with_frequent_planes)
+
+
+# QUESTION 4: Compare airtime with the duration between departure and arrival.
+# Write code and/or produce plots to explain your findings. (Hint: consider the location of
+# the airport.)
+
+library(lubridate)
+
+# Adjust times and handle cases that cross midnight
+flights_adjusted <- flights %>%
+  mutate(
+    sched_dep_time = make_datetime(year, month, day, sched_dep_time %/% 100, sched_dep_time %% 100),
+    sched_arr_time = make_datetime(year, month, day, sched_arr_time %/% 100, sched_arr_time %% 100),
+    actual_dep_time = make_datetime(year, month, day, dep_time %/% 100, dep_time %% 100),
+    actual_arr_time = make_datetime(year, month, day, arr_time %/% 100, arr_time %% 100)
+  ) %>%
+  mutate(
+    scheduled_duration = difftime(sched_arr_time, sched_dep_time, units = "mins"),
+    actual_duration = difftime(actual_arr_time, actual_dep_time, units = "mins")
+  ) %>%
+  filter(!is.na(air_time), !is.na(actual_duration))
+
+# Compare airtime with actual duration
+flights_comparison <- flights_adjusted %>%
+  mutate(duration_difference = air_time - as.numeric(actual_duration))
+
+# Plot
+ggplot(flights_comparison, aes(x = air_time, y = as.numeric(actual_duration))) +
+  geom_point(alpha = 0.3) +
+  geom_abline(color = "red") +
+  labs(title = "Comparison of Airtime and Actual Flight Duration",
+       x = "Airtime (minutes)",
+       y = "Actual Duration (minutes)") +
+  theme_minimal()
+
+
+# QUESTION 5: On what day of the week should you leave if you want to minimize the
+# chance of a delay? Write code and/or produce plots to explain your findings.
+
+# average delay by day of the week
+avg_delay_by_day <- flights %>%
+  mutate(weekday = wday(time_hour, label = TRUE)) %>%
+  group_by(weekday) %>%
+  summarize(avg_dep_delay = mean(dep_delay, na.rm = TRUE),
+            avg_arr_delay = mean(arr_delay, na.rm = TRUE)) %>%
+  arrange(avg_dep_delay)
+
+# plot
+ggplot(avg_delay_by_day, aes(x = weekday, y = avg_dep_delay)) +
+  geom_col() +
+  labs(title = "Average Departure Delay by Day of the Week",
+       x = "Day of the Week",
+       y = "Average Departure Delay (minutes)") +
+  theme_minimal()

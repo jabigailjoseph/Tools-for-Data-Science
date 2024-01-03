@@ -1,0 +1,182 @@
+# Abigail Joseph
+
+_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+# Part 1 - Tidying Up the Data
+
+# installing tidyverse
+library(tidyverse)
+
+# loading the dataset
+who
+
+# section 12.6 steps
+
+who1 <- who %>% 
+  
+  pivot_longer(
+    cols = new_sp_m014:newrel_f65, 
+    names_to = "key", 
+    values_to = "cases", 
+    values_drop_na = TRUE
+  )
+
+who1
+
+who2 <- who1 %>% 
+mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
+who2
+
+who3 <- who2 %>% 
+separate(key, c("new", "type", "sexage"), sep = "_")
+who3
+
+who3 %>% 
+count(new)
+
+who4 <- who3 %>% 
+select(-new, -iso2, -iso3)
+
+who5 <- who4 %>% 
+separate(sexage, c("sex", "age"), sep = 1)
+
+# the tidied data
+who5
+
+# saving the data to an excel file
+
+# Installing and loading necessary packages
+if (!requireNamespace("openxlsx", quietly = TRUE)) {
+  install.packages("openxlsx")
+}
+
+library(openxlsx)
+
+# saving in the main directory
+excel_file_path <- "./who5.xlsx"
+
+# writing the modified data frame to an Excel file
+write.xlsx(who5, excel_file_path, rowNames = FALSE)
+
+
+_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+# QUESTION 1: Which countries had the largest and smallest number of TB cases in 2012?
+
+# filtering data for the year 2012
+tb_2012 <- subset(who5, year == 2012)
+
+# country with the largest number of TB cases in 2012
+largest_country <- tb_2012$country[which.max(tb_2012$cases)]
+
+# country with the smallest number of TB cases in 2012
+smallest_country <- tb_2012$country[which.min(tb_2012$cases)]
+
+# results
+cat("Country with the largest number of TB cases in 2012:", largest_country, "\n")
+cat("Country with the smallest number of TB cases in 2012:", smallest_country, "\n")
+
+
+
+# QUESTION 2: Plot the number of cases per gender for Australia over time, for the period covered in
+# the dataset for that country.
+
+# filtering data for Australia
+australia_data <- who5 %>%
+filter(country == "Australia")
+
+# plotting number of cases per gender over time
+ggplot(australia_data, aes(x = year, y = cases, fill = sex)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "TB Cases per Gender in Australia Over Time",
+       x = "Year",
+       y = "Number of TB Cases",
+       fill = "Gender") +
+  theme_minimal()
+
+
+
+# QUESTION 3: Plot the total number of cases per gender for Afghanistan over time, for the period
+# between 2000 and 2013
+
+# filtering data for Afghanistan and the specified time period
+afghanistan_data <- who5 %>%
+filter(country == "Afghanistan" & year >= 2000 & year <= 2013)
+
+# separating gender from 'sex' column
+afghanistan_data <- afghanistan_data %>%
+separate(sex, into = c("gender", "age_group"), sep = 1)
+
+# Plot the total number of cases per gender over time
+ggplot(afghanistan_data, aes(x = year, y = cases, fill = gender)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(title = "Total TB Cases per Gender in Afghanistan (2000-2013)",
+       x = "Year",
+       y = "Total Number of TB Cases",
+       fill = "Gender") +
+  theme_minimal()
+
+
+
+# QUESTION 4: Compute and plot (pie chart?) the percentage of cases per age group for the 3 North
+# American countries of largest population (USA, Canada and Mexico) in the longest possible period
+# covered by the dataset for all those countries.
+
+# filtering USA, Canada, and Mexico
+north_america_data <- who5[who5$country %in% c("USA", "Canada", "Mexico"), ]
+
+# TB cases by age group and country
+age_group_cases <- aggregate(cases ~ age + country, data = north_america_data, sum)
+
+# total cases per country for normalization
+total_cases_per_country <- aggregate(cases ~ country, data = north_america_data, sum)
+
+# combine total cases with age group cases
+age_group_cases <- merge(age_group_cases, total_cases_per_country, by = "country")
+
+# percentages
+age_group_cases$percentage <- (age_group_cases$cases.x / age_group_cases$cases.y) * 100
+
+# rename columns for clarity
+names(age_group_cases)[names(age_group_cases) == "cases.x"] <- "cases_by_age_group"
+names(age_group_cases)[names(age_group_cases) == "cases.y"] <- "total_cases"
+
+# plot
+ggplot(age_group_cases, aes(x = "", y = percentage, fill = age)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  facet_wrap(~ country) + 
+  theme_void() +
+  labs(fill = "Age Group", title = "Percentage of TB Cases by Age Group in North America")
+
+
+# QUESTION 10: Which country had the sharpest reduction (in % terms) in the total number of cases
+# between 1997 and 2010?
+
+# libraries
+library(dplyr)
+library(tidyr)
+
+# filtering data for the years 1997 and 2010
+filtered_data <- who5 %>% filter(year %in% c(1997, 2010))
+
+# cases by country and year
+total_cases_by_country <- filtered_data %>%
+group_by(country, year) %>%
+summarize(total_cases = sum(cases, na.rm = TRUE))
+
+# reshaping the data 
+cases_by_year_country <- total_cases_by_country %>%
+pivot_wider(names_from = year, values_from = total_cases)
+
+# percentage change for each country
+cases_by_year_country <- cases_by_year_country %>%
+mutate(percentage_change = ((`2010` - `1997`) / `1997`) * 100)
+
+# country with the sharpest reduction
+sharpest_reduction_country <- cases_by_year_country %>%
+arrange(percentage_change) %>%
+slice(1)
+
+# result
+print(sharpest_reduction_country)

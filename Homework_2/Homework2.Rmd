@@ -1,0 +1,179 @@
+# Abigail Joseph
+# homework 2, Tools for Data Science
+
+_*_*_*_*_*_*_*_*_*_*_*_**_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+# Problem 1
+
+# Load the NBA salaries dataset into a variable called salaries
+file_path <- "C:/Users/ajose/OneDrive/Documents/R/2017-18_NBA_salary.csv"
+
+# Accounting for unexpected error in line 49
+salaries <- read.csv(file_path, na.strings = "")
+
+# 1. Who is the highest paid NBA player and what is his team, draft number,...
+
+# highest paid player
+highest = which.max(salaries$Salary)
+highest
+# his team
+team <- salaries[70, "Tm"]
+team
+# his draft number
+draft_number <- salaries[70, "NBA_DraftNumber"]
+draft_number
+#minutes played
+mp <- salaries[70, "MP"]
+mp
+# true shooting percentage
+--------------------------
+# checking column name because of error with special character (%)
+colnames(salaries)
+# calculating TS%
+ts <- salaries[70, "TS."]
+ts
+
+# 2.  What is the minimum, maximum, and average salaries of NBA...
+
+# filtering all players from the US
+usa_players <- salaries[salaries$NBA_Country == "USA", ]
+# variable for all US players
+usa_players
+
+#minimum salary
+min_salary <- min(usa_players$Salary)
+min_salary
+
+#maximum salary
+max_salary <- max(usa_players$Salary)
+max_salary
+
+#average salary
+avg_salary <- mean(usa_players$Salary)
+avg_salary
+
+# 3. What is the minimum, maximum, and average ages...
+
+#minimum age
+min_age <- min(usa_players$Age)
+min_age
+
+#maximum age 
+max_age <- max(usa_players$Age)
+max_age
+
+#average age 
+avg_age <- mean(usa_players$Age)
+avg_age
+
+# What is the minimum, maximum, and average ages...NBA non-USA players?
+
+# filtering all non-usa players
+non_usa_players <- salaries[salaries$NBA_Country != "USA", ]
+#variable for non-usa players
+non_usa_players
+
+#minimum age (non_USA)
+min_age_non_usa <- min(non_usa_players$Age)
+min_age_non_usa
+
+#maximum age (non-USA)
+max_age_non_usa <- max(non_usa_players$Age)
+max_age_non_usa
+
+#average age (non-USA)
+avg_age_non_usa <- mean(non_usa_players$Age)
+avg_age_non_usa
+
+_*_*_*_*_*_*_*_*_*_*_*_**_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+# Problem 2
+
+# 1.  What is the average salary and average true shooting percentage (TS%)...
+
+# setting variable for first team (California)
+ca_team_1 <- subset(salaries, Tm == "GSW")
+# average salary
+avgs_ca_team_1 <- mean(ca_team_1$Salary)
+avgs_ca_team_1
+# average ts percentage
+avgts_ca_team_1 <- mean(ca_team_1$TS.)
+avgts_ca_team_1
+
+# 2.  What is the average salary and average true shooting percentage (TS%)...
+
+# setting variable for second team (California)
+ca_team_2 <- subset(salaries, Tm == "LAL")
+ca_team_2
+#average salary
+avgs_ca_team_2 <- mean(ca_team_2$Salary)
+avgs_ca_team_2
+#average ts percentage
+avgts_ca_team_2 <- mean(ca_team_2$TS.)
+avgts_ca_team_2
+
+# 3. Print a table that compares the average age, salaries and true...
+
+# calculating average age for team 1
+average_age_1 <- mean(ca_team_1$Age)
+average_age_1
+# calculating average age for team 2
+average_age_2 <- mean(ca_team_2$Age)
+average_age_2
+
+# creating team 1 name for the table
+team_1 <- "GSW"
+# creating team 2 name for the table
+team_2 <- "LAL"
+
+#creating a new dataframe
+comparison_table <- data.frame(Team_1 = team_1, avg_age_1 = average_age_1, average_salary_1 = avgs_ca_team_1, average_ts_1 = avgts_ca_team_1, Team_2 = team_2, avg_age_2 = average_age_2, average_salary_2 = avgs_ca_team_2, average_ts_2 = avgts_ca_team_2)
+
+#printing the dataframe as a table
+print(comparison_table)
+
+_*_*_*_*_*_*_*_*_*_*_*_**_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_*_
+
+# Problem 3
+
+# Load the nycflights13 dataset into a variable called flights...
+install.packages("nycflights13")
+library(nycflights13)
+
+flights <- nycflights13::flights
+
+# 1.  How many flights went from New York to Fort Lauderdale (FLL) in 2013?
+
+# filtering flights from NY airports to FLL
+NY_FLL <- filter(flights, origin %in% c("JFK", "LGA") & dest == "FLL" & year == 2013)
+# flight count
+NY_FLL_count <- nrow(NY_FLL)
+# number of flights from NY airports to FLL (answer):
+NY_FLL_count
+
+# 2. How many flights went from New York (JFK) to Fort Lauderdale (FLL)...
+
+# filtering flights from JFK specifically
+JFK_FLL <- filter(flights, origin %in% c("JFK") & dest == "FLL" & year == 2013)
+# flight count
+JFK_FLL_count <- nrow(JFK_FLL)
+# number of flights from JFK to FLL (answer):
+JFK_FLL_count
+
+# 3. How many flights went from New York (LGA) to Fort Lauderdale (FLL) in 2013?
+
+# filtering flights from LGA 
+LGA_FLL <- filter(flights, origin %in% c("LGA") & dest == "FLL" & year == 2013)
+# flight count
+LGA_FLL_count <- nrow(LGA_FLL)
+# number of flights from LGA to FLL (answer):
+LGA_FLL_count
+
+# 4. How many flights went from New York (EWR) to Fort Lauderdale (FLL) in 2013?
+
+# filtering flights from EWR
+EWR_FLL <- filter(flights, origin %in% c("EWR") & dest == "FLL" & year == 2013)
+# flight count
+EWR_FLL_count <- nrow(EWR_FLL)
+# number of flights from EWR to FLL (answer):
+EWR_FLL_count
